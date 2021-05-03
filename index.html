@@ -51,8 +51,12 @@
   </head>
   <body>
     <p>
-      Click anywhere to load 100 concurrent requests without service worker.
-      Then refresh and try again.
+      Click anywhere to load 100 concurrent requests. Then refresh the page
+      (load serviceworker) and try again.
+    </p>
+    <p>
+      There should be failures the first time and none the second. If that's not
+      the case check the service worker status in the network tab.
     </p>
     <ul id="list"></ul>
   </body>
