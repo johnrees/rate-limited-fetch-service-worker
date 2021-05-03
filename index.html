@@ -12,11 +12,7 @@
     </style>
     <script>
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("/worker.js")
-          // I don't know if this auto reload is a good idea, but the page needs to refresh
-          // in order to install the service worker.
-          .then(window.location.reload);
+        navigator.serviceWorker.register("/worker.js");
       }
 
       // load 100 fetch requests on click
@@ -55,7 +51,10 @@
   </head>
   <body>
     <script type="text/javascript" src="app.js"></script>
-    <p>Click anywhere to load 100 concurrent requests</p>
+    <p>
+      Click anywhere to load 100 concurrent requests without service worker.
+      Then refresh and try again.
+    </p>
     <ul id="list"></ul>
   </body>
 </html>
