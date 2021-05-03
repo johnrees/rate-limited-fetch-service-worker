@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      .fail {
+        color: red;
+      }
+      .success {
+        color: green;
+      }
+    </style>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/worker.js")
+          // I don't know if this auto reload is a good idea, but the page needs to refresh
+          // in order to install the service worker.
+          .then(window.location.reload);
+      }
+
+      // load 100 fetch requests on click
+      document.addEventListener("click", () => {
+        for (let i = 0; i < 100; i++) {
+          fetch("https://devnet.solana.com/", {
+            headers: {
+              accept: "*/*",
+              "content-type": "application/json",
+            },
+            body:
+              '{"method":"getAccountInfo","jsonrpc":"2.0","params":["2KSdAoiXetBadUD79VE3tYBwkpqovLkYw7oyEztgdVrg",{"encoding":"base64","commitment":"confirmed"}],"id":"18fd6ca6-a49b-4924-9e0c-432eca6001a3"}',
+            method: "POST",
+          })
+            .then(() => {
+              // request successful
+              document
+                .getElementById("list")
+                .insertAdjacentHTML(
+                  "beforeend",
+                  "<li class='success'>success</li>"
+                );
+            })
+            .catch((err) => {
+              // request failed
+              document
+                .getElementById("list")
+                .insertAdjacentHTML(
+                  "beforeend",
+                  `<li class='fail'>${err.message}</li>`
+                );
+            });
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <script type="text/javascript" src="app.js"></script>
+    <p>Click anywhere to load 100 concurrent requests</p>
+    <ul id="list"></ul>
+  </body>
+</html>
