@@ -22,7 +22,7 @@ const rateLimitedFetch = async (url, options = {}) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
 
-  if (url.host === "devnet.solana.com") {
+  if (url.host.endsWith("solana.com")) {
     event.respondWith(
       rateLimitedFetch(event.request).then((response) => {
         return response;
