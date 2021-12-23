@@ -1,8 +1,10 @@
-const MS_DELAY = 0;
+const BATCH_MS = 200;
+const THROTTLE_DELAY_MS = 0;
+
 let count = 0;
 
-const sleep = () => {
-  const delay = MS_DELAY * count++;
+const waitIfBeingThrottled = () => {
+  const delay = THROTTLE_DELAY_MS * count++;
   return new Promise((res) =>
     setTimeout(() => {
       // try to bring count back to 0
@@ -12,25 +14,25 @@ const sleep = () => {
   );
 };
 
-function debounceAgg(fn, wait = 200) {
+const debounceAndBatch = (fn, wait = BATCH_MS) => {
   let timeout;
-  let update = [];
+  let batchedArgs = [];
 
-  function processUpdate() {
+  const processUpdate = () => {
     timeout = null;
-    fn(update);
-    update = [];
-  }
+    fn(batchedArgs);
+    batchedArgs = [];
+  };
 
   return (value) => {
-    update.push(value);
-    if (timeout == null) timeout = setTimeout(processUpdate, wait);
+    batchedArgs.push(value);
+    if (!timeout) timeout = setTimeout(processUpdate, wait);
   };
-}
+};
 
 const batchedFetch = (url, options = {}) =>
   new Promise(async (resolve) => {
-    await sleep();
+    await waitIfBeingThrottled();
     foo({
       resolve,
       url,
@@ -38,19 +40,23 @@ const batchedFetch = (url, options = {}) =>
     });
   });
 
-const foo = debounceAgg(async (args) => {
-  const body = await Promise.all(args.map((arg) => arg.url.json()));
-  const { url, options, resolve, ...rest } = args[0];
+const foo = debounceAndBatch(async (requests) => {
+  const [{ url, options, resolve, ...rest }] = requests;
+
+  const allRequestBodies = await Promise.all(
+    requests.map((request) => request.url.json())
+  );
 
   const response = await fetch(url, {
     ...rest,
     ...options,
-    body: JSON.stringify(body),
+    body: JSON.stringify(allRequestBodies),
   });
-  const results = await response.json();
-  console.log({ results });
-  results.forEach((result, i) => {
-    args[i]?.resolve(new Response(JSON.stringify(result), response));
+
+  const allResults = await response.json();
+
+  allResults.forEach((result, i) => {
+    requests[i]?.resolve(new Response(JSON.stringify(result), response));
   });
 });
 
