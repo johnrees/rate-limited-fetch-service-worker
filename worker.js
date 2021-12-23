@@ -1,14 +1,18 @@
 const BATCH_MS = 200;
 const THROTTLE_DELAY_MS = 0;
 
-let count = 0;
+let throttledWaitingList = 0;
+
+const requestMatcher = ({ url }) =>
+  // new URL(url).host.endsWith("solana.com")
+  new URL(url).href.includes("data.json");
 
 const waitIfBeingThrottled = () => {
-  const delay = THROTTLE_DELAY_MS * count++;
+  const delay = THROTTLE_DELAY_MS * throttledWaitingList++;
   return new Promise((res) =>
     setTimeout(() => {
-      // try to bring count back to 0
-      count = Math.max(count - 1, 0);
+      // try to bring throttledWaitingList back to 0
+      throttledWaitingList = Math.max(throttledWaitingList - 1, 0);
       res();
     }, delay)
   );
@@ -61,14 +65,7 @@ const foo = debounceAndBatch(async (requests) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url);
-  // if (url.host.endsWith("solana.com")) {
-  if (url.href.includes("data.json")) {
-    event.respondWith(
-      batchedFetch(event.request).then((response) => {
-        console.log({ response });
-        return response;
-      })
-    );
+  if (requestMatcher(event.request)) {
+    event.respondWith(batchedFetch(event.request));
   }
 });
