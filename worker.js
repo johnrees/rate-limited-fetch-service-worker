@@ -34,26 +34,23 @@ const debounceAndBatch = (fn, wait = BATCH_MS) => {
   };
 };
 
-const batchedFetch = (url, options = {}) =>
+const batchedFetch = (url) =>
   new Promise(async (resolve) => {
     await waitIfBeingThrottled();
-    foo({
-      resolve,
+    debouncedFetch({
       url,
-      options,
+      resolve,
     });
   });
 
-const foo = debounceAndBatch(async (requests) => {
-  const [{ url, options, resolve, ...rest }] = requests;
+const debouncedFetch = debounceAndBatch(async (requests) => {
+  const [{ url }] = requests;
 
   const allRequestBodies = await Promise.all(
     requests.map((request) => request.url.json())
   );
 
   const response = await fetch(url, {
-    ...rest,
-    ...options,
     body: JSON.stringify(allRequestBodies),
   });
 
