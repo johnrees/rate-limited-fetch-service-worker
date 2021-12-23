@@ -17,17 +17,13 @@
 
       // load 100 fetch requests on click
       document.addEventListener("click", () => {
-        for (let i = 0; i < 10; i++) {
-          fetch(
-            // "https://api.devnet.solana.com/",
-            "data.json",
-            {
+        for (let i = 0; i < 50; i++) {
+          fetch("https://api.devnet.solana.com/", {
             headers: {
               accept: "*/*",
               "content-type": "application/json",
             },
-            body:
-              `{"method":"getAccountInfo","jsonrpc":"2.0","params":["2KSdAoiXetBadUD79VE3tYBwkpqovLkYw7oyEztgdVrg",{"encoding":"base64","commitment":"confirmed"}],"id":${Math.floor(Math.random()*1000)}}`,
+            body: `{"method":"getAccountInfo","jsonrpc":"2.0","params":["",{"encoding":"base64","commitment":"confirmed"}],"id":${i}`,
             method: "POST",
           })
             .then(() => {
@@ -53,14 +49,7 @@
     </script>
   </head>
   <body>
-    <p>
-      Click anywhere to load 100 concurrent requests. Then refresh the page
-      (load serviceworker) and try again.
-    </p>
-    <p>
-      There should be failures the first time and none the second. If that's not
-      the case check the service worker status in the network tab.
-    </p>
+    <p>Click anywhere to load 50 concurrent requests.</p>
     <ul id="list"></ul>
   </body>
 </html>

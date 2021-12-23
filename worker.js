@@ -3,9 +3,7 @@ const THROTTLE_DELAY_MS = 0;
 
 let throttledWaitingList = 0;
 
-const requestMatcher = ({ url }) =>
-  // new URL(url).host.endsWith("solana.com")
-  new URL(url).href.includes("data.json");
+const requestMatcher = ({ url }) => new URL(url).host.endsWith("solana.com");
 
 const waitIfBeingThrottled = () => {
   const delay = THROTTLE_DELAY_MS * throttledWaitingList++;
@@ -37,30 +35,28 @@ const debounceAndBatch = (fn, wait = BATCH_MS) => {
 const batchedFetch = (request) =>
   new Promise(async (resolve) => {
     await waitIfBeingThrottled();
-
-    debouncedFetch({
-      request,
-      resolve,
-    });
+    debouncedFetch({ request, resolve });
   });
 
-const debouncedFetch = debounceAndBatch(async (deferredRequests) => {
-  const [{ request }] = deferredRequests;
+const debouncedFetch = debounceAndBatch(async (requests) => {
+  // inject all request bodies into first request
 
   const allRequestBodies = await Promise.all(
-    deferredRequests.map(({ request }) => request.json())
+    requests.map(({ request }) => request.json())
   );
 
-  const response = await fetch(request, {
+  const { request } = requests[0];
+
+  const response = await fetch(request.url, {
     body: JSON.stringify(allRequestBodies),
+    headers: request.headers,
+    method: request.method,
   });
 
   const allResults = await response.json();
 
   allResults.forEach((result, i) => {
-    deferredRequests[i]?.resolve(
-      new Response(JSON.stringify(result), response)
-    );
+    requests[i].resolve(new Response(JSON.stringify(result), response));
   });
 });
 
