@@ -34,30 +34,33 @@ const debounceAndBatch = (fn, wait = BATCH_MS) => {
   };
 };
 
-const batchedFetch = (url) =>
+const batchedFetch = (request) =>
   new Promise(async (resolve) => {
     await waitIfBeingThrottled();
+
     debouncedFetch({
-      url,
+      request,
       resolve,
     });
   });
 
-const debouncedFetch = debounceAndBatch(async (requests) => {
-  const [{ url }] = requests;
+const debouncedFetch = debounceAndBatch(async (deferredRequests) => {
+  const [{ request }] = deferredRequests;
 
   const allRequestBodies = await Promise.all(
-    requests.map((request) => request.url.json())
+    deferredRequests.map(({ request }) => request.json())
   );
 
-  const response = await fetch(url, {
+  const response = await fetch(request, {
     body: JSON.stringify(allRequestBodies),
   });
 
   const allResults = await response.json();
 
   allResults.forEach((result, i) => {
-    requests[i]?.resolve(new Response(JSON.stringify(result), response));
+    deferredRequests[i]?.resolve(
+      new Response(JSON.stringify(result), response)
+    );
   });
 });
 
